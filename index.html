@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <title>Computer networks</title>
+  <style>
+    .images {
+      text-align: center;
+    }
+
+    .images img {
+      margin: 5px; 
+    }
+
+    h1 {
+      color: blue;
+      position: relative;
+      animation: moveTitle 2s infinite alternate;
+    }
+
+    @keyframes moveTitle {
+      to {
+        transform: translateX(10px);
+      }
+    }
+
+    h2 {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+    <h1>Computer networks 2023: Exercise 1</h1>
+
+    <h2>Dolev Gabay & Gal Razabi</h2>
+
+    <div class="images">
+        <img src="./spongebob.jpg" alt="spongebob" width="200" height="150">
+        <img src="./patrick.jpg" alt="patrick" width="200" height="150">
+    </div>
+
+    <div class="links">
+        <a href="https://moodle.runi.ac.il/2024/course/view.php?id=2401572">Course Website</a> <br> 
+        <a href="https://playlistsync.me">Playlist-sync</a>
+    </div>
+
+    <hr>
+
+    <form action="http://localhost:8080" method="post">
+      <label for="Sender">Sender:</label><br>
+        <input type="text" id="Sender" name="Sender"><br>
+
+        <label for="Receiver">Receiver:</label><br>
+        <input type="text" id="Receiver" name="Receiver"><br>
+
+        <label for="Subject">Subject:</label><br>
+        <input type="text" id="Subject" name="Subject"><br>
+
+        <label for="Message">Message:</label><br>
+        <input type="text" id="Message" name="Message"><br>
+
+        <input type="submit" value="Submit">
+        <br>
+    </form>
+</body>
+</html>
