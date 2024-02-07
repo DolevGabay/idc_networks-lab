@@ -1,0 +1,3 @@
+our bonus implements:
+we added a list on emails to the MultiThreadedWebServer so the user can add new email from index.html 
+see all the existing email on param_info.

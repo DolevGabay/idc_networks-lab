@@ -6,6 +6,9 @@ import java.util.concurrent.Executors;
 import java.io.InputStream;
 import java.util.Properties;
 import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class MultiThreadedWebServer {
 
@@ -13,32 +16,54 @@ public class MultiThreadedWebServer {
     private static final int PORT;
     private static final String ROOT_DIRECTORY;
     private static final String DEFAULT_PAGE;
+    private static  List<HashMap<String, String>> EMAILS;
 
     static {
-        // Load configuration from config.ini
+        // Initialize default values
+        int maxThreads = 10;
+        int port = 8080;
+        String rootDirectory = "/";
+        String defaultPage = "index.html";
+
+
         Properties prop = new Properties();
         try (InputStream input = new FileInputStream("config.ini")) {
             prop.load(input);
+
+            port = Integer.parseInt(prop.getProperty("port"));
+            maxThreads = Integer.parseInt(prop.getProperty("maxThreads"));
+            rootDirectory = prop.getProperty("root");
+            defaultPage = prop.getProperty("defaultPage");
         } catch (IOException ex) {
-            ex.printStackTrace();
+            System.err.println("Error loading configuration from config.ini: " + ex.getMessage());
+            System.err.println("Using default values instead.");
+        } catch (NumberFormatException ex) {
+            System.err.println("Invalid number format in configuration file.");
+            System.err.println("Using default values instead.");
         }
 
-        PORT = Integer.parseInt(prop.getProperty("port"));
-        MAX_THREADS = Integer.parseInt(prop.getProperty("maxThreads"));
-        ROOT_DIRECTORY = prop.getProperty("root");
-        DEFAULT_PAGE = prop.getProperty("defaultPage");
+        PORT = port;
+        MAX_THREADS = maxThreads;
+        ROOT_DIRECTORY = rootDirectory;
+        DEFAULT_PAGE = defaultPage;
+        EMAILS = new ArrayList<HashMap<String, String>>();
     }
 
-    public static void main(String[] args) {
+    public static void startServer() {
+        // Create a thread pool with a MAX_THREADS number of threads
         ExecutorService threadPool = Executors.newFixedThreadPool(MAX_THREADS);
 
         try {
             ServerSocket serverSocket = new ServerSocket(PORT);
             System.out.println("Server listening on port " + PORT);
-
             while (true) {
-                Socket clientSocket = serverSocket.accept();
-                threadPool.submit(new RequestHandler(clientSocket));
+                try{
+                    Socket clientSocket = serverSocket.accept();
+                    threadPool.submit(new RequestHandler(clientSocket));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    serverSocket.close();
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -53,5 +78,13 @@ public class MultiThreadedWebServer {
 
     public static String getDefaultPage() {
         return DEFAULT_PAGE;
+    }
+
+    public static List<HashMap<String, String>> getEmails() {
+        return EMAILS;
+    }
+
+    public static void addEmail(HashMap<String, String> email) {
+        EMAILS.add(email);
     }
 }

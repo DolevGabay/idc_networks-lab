@@ -1,4 +1,3 @@
-// File: HttpRequest.java
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.HashMap;
@@ -10,7 +9,6 @@ public class HttpRequest {
     private String path;
     private Map<String, String> headers;
     
-    private String type;
     private String requestedPage;
     private boolean isImage;
     private int contentLength;
@@ -39,8 +37,12 @@ public class HttpRequest {
                     headers.put(headerParts[0], headerParts[1]);
                 }
             }
+
+            if ("/".equals(path)) {
+                path = MultiThreadedWebServer.getDefaultPage();
+            }
     
-            type = headers.get("Content-Type");
+            path = path.replaceAll("\\.\\./", "/");
             requestedPage = path;
             isImage = path.endsWith(".bmp") || path.endsWith(".gif") || path.endsWith(".png") || path.endsWith(".jpg");
             contentLength = Integer.parseInt(headers.getOrDefault("Content-Length", "0"));
@@ -58,7 +60,6 @@ public class HttpRequest {
     }
 
     private void parseParameters() {
-
         parameters = new HashMap<>();
         String queryString = path.contains("?") ? path.split("\\?")[1] : "";
         String[] pairs = queryString.split("&");
@@ -72,7 +73,6 @@ public class HttpRequest {
 
     private void parsePostParameters(BufferedReader reader) {
         try {
-            System.out.println("Parsing POST parameters");
             StringBuilder requestBody = new StringBuilder();
             int contentLengthToRead = contentLength;
     
@@ -97,10 +97,31 @@ public class HttpRequest {
             e.printStackTrace(); 
         }
     }
-    
-    public String getType() {
-        return type;
-    }
+
+    public void printHeaders() {
+        try {
+            StringBuilder stringHeaders = new StringBuilder();
+            stringHeaders.append("Request headers: ").append("\r\n");
+            stringHeaders.append("Request Method: ").append(this.method).append("\r\n");
+            stringHeaders.append("Requested Page: ").append(this.requestedPage).append("\r\n");
+            stringHeaders.append("IsImage: ").append(this.isImage).append("\r\n");
+            stringHeaders.append("Content Length: ").append(this.contentLength).append("\r\n");
+            stringHeaders.append("Referer: ").append(this.referer).append("\r\n");
+            stringHeaders.append("User Agent: ").append(this.userAgent).append("\r\n");
+            if(this.parameters != null) {
+                if (this.parameters.size() > 0) {
+                    stringHeaders.append("Parameters: ").append("\r\n");
+                    for (String key : this.parameters.keySet()) {
+                        stringHeaders.append("\t").append(key).append(": ").append(this.parameters.get(key)).append("\r\n");
+                    }
+                }
+            }
+            
+            System.out.println(stringHeaders.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }    
 
     public String getRequestedPage() {
         return requestedPage;
@@ -122,7 +143,7 @@ public class HttpRequest {
         return userAgent;
     }
 
-    public Map<String, String> getParameters() {
+    public HashMap<String, String> getParameters() {
         return parameters;
     }
 

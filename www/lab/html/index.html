@@ -49,20 +49,24 @@
     <hr>
 
     <form action="http://localhost:8080" method="post">
+      <h2>Send an email:</h2>
       <label for="Sender">Sender:</label><br>
-        <input type="text" id="Sender" name="Sender"><br>
-
-        <label for="Receiver">Receiver:</label><br>
-        <input type="text" id="Receiver" name="Receiver"><br>
-
-        <label for="Subject">Subject:</label><br>
-        <input type="text" id="Subject" name="Subject"><br>
-
-        <label for="Message">Message:</label><br>
-        <input type="text" id="Message" name="Message"><br>
-
-        <input type="submit" value="Submit">
-        <br>
-    </form>
+      <input type="text" id="Sender" name="Sender"><br>
+  
+      <label for="Receiver">Receiver:</label><br>
+      <input type="text" id="Receiver" name="Receiver"><br>
+  
+      <label for="Subject">Subject:</label><br>
+      <input type="text" id="Subject" name="Subject"><br>
+  
+      <label for="Message">Message:</label><br>
+      <textarea id="Message" name="Message"></textarea><br> 
+  
+      <input type="checkbox" id="important" name="important"> 
+      <label for="important">Important</label><br>
+  
+      <input type="submit" value="Submit">
+  </form>
+  
 </body>
 </html>
