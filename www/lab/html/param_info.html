@@ -16,7 +16,16 @@
         {{EmailList}}
     </ul>
 
-    <button onclick="goToRoot()">Add new email</button>
+    <button onclick="goToRoot()">Add new email \ go back</button>
+    
+    <h2>Delete Email:</h2>
+    <form action="http://localhost:8080/delete" method="post">
+        <label for="uuid">Email's uuid to delete:</label><br>
+        <input type="text" id="uuid-to-delete" name="uuid-to-delete"><br>
+        <input type="submit" value="Delete">
+    </form>
+    
+    <p>{{delete}}</p>
 
     <script>
         function goToRoot() {

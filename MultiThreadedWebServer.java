@@ -9,6 +9,7 @@ import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 public class MultiThreadedWebServer {
 
@@ -84,7 +85,14 @@ public class MultiThreadedWebServer {
         return EMAILS;
     }
 
-    public static void addEmail(HashMap<String, String> email) {
-        EMAILS.add(email);
+    public static void addEmail(HashMap<String, String> parameters) {
+        String uuid = UUID.randomUUID().toString();
+        parameters.put("uuid", uuid);
+        EMAILS.add(parameters);
     }
+
+    public static boolean deleteEmail(String uuid) {
+        return EMAILS.removeIf(email -> email.get("uuid").equals(uuid));
+    }
+    
 }

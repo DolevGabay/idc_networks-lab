@@ -80,8 +80,23 @@ public class RequestHandler implements Runnable {
     private void handlePostRequest(HttpRequest httpRequest, BufferedReader reader, BufferedWriter writer) {
         try {
             HashMap<String, String> parameters = httpRequest.getParameters();
-            MultiThreadedWebServer.addEmail(parameters);
-            
+            String deleteStatus = ""; 
+    
+            if (httpRequest.getPath().contains("delete")) {
+                Boolean deleted = MultiThreadedWebServer.deleteEmail(parameters.get("uuid-to-delete"));
+                if (deleted) {
+                    System.out.println("Deleted email with uuid: " + parameters.get("uuid-to-delete"));
+                    // Set delete status message for successful deletion
+                    deleteStatus = "Deleted email with uuid: " + parameters.get("uuid-to-delete");
+                } else {
+                    System.out.println("Email with uuid: " + parameters.get("uuid-to-delete") + " not found");
+                    // Set delete status message for deletion failure
+                    deleteStatus = "Email with uuid: " + parameters.get("uuid-to-delete") + " not found";
+                }
+            } else {
+                MultiThreadedWebServer.addEmail(parameters);
+            }
+    
             StringBuilder dynamicList = new StringBuilder();
             for (Map.Entry<String, String> entry : parameters.entrySet()) {
                 dynamicList.append("<li>").append(entry.getKey()).append(": ").append(entry.getValue()).append("</li>");
@@ -93,11 +108,14 @@ public class RequestHandler implements Runnable {
                 for (Map.Entry<String, String> entry : email.entrySet()) {
                     emailList.append("<li>").append(entry.getKey()).append(": ").append(entry.getValue()).append("</li>");
                 }
+                emailList.append("<br>");
             }
     
             String htmlContent = new String(Files.readAllBytes(Paths.get(MultiThreadedWebServer.getRootDirectory(), "param_info.html")));
             htmlContent = htmlContent.replace("{{DynamicList}}", dynamicList.toString());
             htmlContent = htmlContent.replace("{{EmailList}}", emailList.toString());
+            htmlContent = htmlContent.replace("{{delete}}", deleteStatus);
+    
             byte[] contentBytes = htmlContent.getBytes();
     
             sendResponse(200, "OK", "text/html", contentBytes, writer, httpRequest);
@@ -105,7 +123,7 @@ public class RequestHandler implements Runnable {
             e.printStackTrace();
         }
     }
-     
+    
 
     private void sendResponse(int statusCode, String statusText, String contentType, byte[] content, BufferedWriter writer, HttpRequest httpRequest) throws IOException {
         try {
