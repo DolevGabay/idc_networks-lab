@@ -46,21 +46,21 @@ public class RequestHandler implements Runnable {
             
             //httpRequest.printHeaders();
             
-
-            
             if ("GET".equals(httpRequest.getMethod()) || "HEAD".equals(httpRequest.getMethod())) {
                 handleGetRequest(httpRequest, writer);
             } else if ("POST".equals(httpRequest.getMethod())) {
                 handlePostRequest(httpRequest, writer);
             } else if ("TRACE".equals(httpRequest.getMethod())) {
                 handleTraceRequest(httpRequest, writer);
-            } else if (httpRequest.getMethod() == null || httpRequest.getMethod() != "OPTIONS" ) {
-                System.out.println("Bad Request");
-            } else {
+            } else if ("OPTIONS".equals(httpRequest.getMethod()) || "DELETE".equals(httpRequest.getMethod()) || "PATCH".equals(httpRequest.getMethod()) || "PUT".equals(httpRequest.getMethod())) {
                 String content = "Not Implemented";
                 byte[] contentBytes = content.getBytes();
                 sendResponse(501, "Not Implemented", "text/html", contentBytes, writer, httpRequest);
-            }
+            } else {
+                System.out.println("Bad Request");
+                sendResponse(400, "Bad Request", "text/html", null, writer, httpRequest);
+            } 
+            
         } catch (Exception e) {
             e.printStackTrace();
             String content = "Internal Server Error";
