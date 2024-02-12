@@ -40,7 +40,7 @@ public class RequestHandler implements Runnable {
             System.out.println("--------------------");
             httpRequest.printHeaders();
             System.out.println("--------------------");
-            
+
             if(httpRequest.getCorrupted())
             {
                 sendResponse(400, "Bad Request", "text/html", null, writer, httpRequest);
@@ -186,7 +186,7 @@ public class RequestHandler implements Runnable {
                         int offset = 0;
                         while (offset < content.length) {
                             int bytesToWrite = Math.min(1000, content.length - offset);
-                            outputStream.write(Integer.toHexString(bytesToWrite).getBytes());
+                            outputStream.write(String.valueOf(bytesToWrite).getBytes());
                             outputStream.write("\r\n".getBytes());
                             outputStream.write(content, offset, bytesToWrite);
                             outputStream.write("\r\n".getBytes());
