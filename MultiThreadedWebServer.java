@@ -62,12 +62,12 @@ public class MultiThreadedWebServer {
                     Socket clientSocket = serverSocket.accept();
                     threadPool.submit(new RequestHandler(clientSocket));
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    System.err.println("Error accepting connection from client");
                     serverSocket.close();
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error starting server on port " + PORT);
         } finally {
             threadPool.shutdown();
         }

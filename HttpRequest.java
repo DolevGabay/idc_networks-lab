@@ -42,10 +42,10 @@ public class HttpRequest {
                 String[] pathAndParams = requestParts[1].split("\\?");
                 path = pathAndParams[0];
                 if (requestParts.length == 3) {
-                    if(requestParts[2] != "HTTP/1.1" || requestParts[2] != "HTTP/1.0"){
+                    if (!requestParts[2].equals("HTTP/1.1") && !requestParts[2].equals("HTTP/1.0")) {
                         Corrupted = true;
                     }
-                }
+                }                
             }
     
             headers = new HashMap<>();
@@ -73,7 +73,7 @@ public class HttpRequest {
             parseBodyParameters(reader);
             
         } catch (IOException | NumberFormatException e) {
-            e.printStackTrace(); 
+            System.out.println("Error parsing request");
         }
     }
 
@@ -91,11 +91,9 @@ public class HttpRequest {
                         System.err.println("Error: Invalid key-value pair format in query string");
                     }
                 }
-            } else {
-                System.err.println("Error: No query string present");
-            }
+            } 
         } catch (ArrayIndexOutOfBoundsException e) {
-            System.err.println("Error: Malformed query string");
+            System.out.println("Error: Malformed query string");
         }
     }
     
@@ -127,7 +125,7 @@ public class HttpRequest {
                 fullRequest += "\r\n" + requestBody.toString();
             }
         } catch (IOException e) {
-            e.printStackTrace(); 
+            System.out.println("Error reading request body");
         }
     }
 
@@ -153,7 +151,7 @@ public class HttpRequest {
             
             System.out.println(stringHeaders.toString());
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Error printing headers");
         }
     }    
 

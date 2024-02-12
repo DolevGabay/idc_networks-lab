@@ -1,6 +1,5 @@
 import java.io.*;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,12 +20,12 @@ public class RequestHandler implements Runnable {
         try {
             handleRequest();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error while handling request");
         } finally {
             try {
                 clientSocket.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("Error while closing client socket");
             }
         }
     }
@@ -38,13 +37,15 @@ public class RequestHandler implements Runnable {
 
             HttpRequest httpRequest = new HttpRequest(reader);
             System.out.println(httpRequest.getFullRequest());
+            System.out.println("--------------------");
+            httpRequest.printHeaders();
+            System.out.println("--------------------");
+            
             if(httpRequest.getCorrupted())
             {
                 sendResponse(400, "Bad Request", "text/html", null, writer, httpRequest);
                 return;
-            }
-            
-            //httpRequest.printHeaders();
+            }            
             
             if ("GET".equals(httpRequest.getMethod()) || "HEAD".equals(httpRequest.getMethod())) {
                 handleGetRequest(httpRequest, writer);
@@ -62,10 +63,10 @@ public class RequestHandler implements Runnable {
             } 
             
         } catch (Exception e) {
-            e.printStackTrace();
             String content = "Internal Server Error";
             byte[] contentBytes = content.getBytes();
             sendResponse(500, "Internal Server Error", "text/html", contentBytes, null, null);
+            System.out.println("Error while handling request");
         }
     }
 
@@ -84,10 +85,10 @@ public class RequestHandler implements Runnable {
                 byte[] fileContent = Files.readAllBytes(filePath);
                 sendResponse(200, "OK", determineContentType(filePath), fileContent, writer, httpRequest);
             } catch (IOException e) {
-                e.printStackTrace();
                 String content = "Internal Server Error";
                 byte[] contentBytes = content.getBytes();
                 sendResponse(500, "Internal Server Error", "text/html", contentBytes, writer, httpRequest);
+                System.out.println("Error while handling request");
             }
         } else {
             String content = "Not Found";
@@ -144,7 +145,7 @@ public class RequestHandler implements Runnable {
     
             sendResponse(200, "OK", "text/html", contentBytes, writer, httpRequest);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error while handling request");
         }
     }    
 
@@ -161,10 +162,7 @@ public class RequestHandler implements Runnable {
                 return;
             }
             StringBuilder responseHeaders = new StringBuilder();
-            responseHeaders.append("HTTP/1.1 ").append(statusCode).append(" ").append(statusText).append("\r\n");
-    
-            // Check if the client requested chunked transfer encoding
-            
+            responseHeaders.append("HTTP/1.1 ").append(statusCode).append(" ").append(statusText).append("\r\n");            
     
             if (httpRequest.isChunked()) {
                 responseHeaders.append("Transfer-Encoding: chunked\r\n");
@@ -197,7 +195,7 @@ public class RequestHandler implements Runnable {
                         outputStream.write("0\r\n\r\n".getBytes());
                         outputStream.flush();
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        System.out.println("Error while sending response");
                     }
                 }
                 else {
@@ -207,14 +205,14 @@ public class RequestHandler implements Runnable {
                         outputStream.flush();
                         outputStream.close();
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        System.out.println("Error while sending response");
                     }
                 }
             }
     
             System.out.println("Sent response header:\nHTTP/1.1 " + statusCode + " " + statusText);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Error while sending response");
         }
     }
 
@@ -231,7 +229,7 @@ public class RequestHandler implements Runnable {
             writer.flush();
             return;
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error while sending response");
         }
     }
 

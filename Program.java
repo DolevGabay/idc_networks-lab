@@ -1,5 +1,9 @@
 public class Program {
     public static void main(String[] args) {
-        MultiThreadedWebServer.startServer();
+        try{
+            MultiThreadedWebServer.startServer();
+        } catch (Exception e) {
+            System.out.println("Error starting server " );
+        }
     }
 }
