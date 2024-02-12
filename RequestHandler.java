@@ -76,21 +76,8 @@ public class RequestHandler implements Runnable {
             sendResponse(200, "OK", "text/html", null, writer, httpRequest);
             return;
         }
-        String path = httpRequest.getPath();
-
-        Path filePath = Paths.get(MultiThreadedWebServer.getRootDirectory(), path);
-
-        if (Files.exists(filePath) && !Files.isDirectory(filePath)) {
-            try {
-                byte[] fileContent = Files.readAllBytes(filePath);
-                sendResponse(200, "OK", determineContentType(filePath), fileContent, writer, httpRequest);
-            } catch (IOException e) {
-                String content = "Internal Server Error";
-                byte[] contentBytes = content.getBytes();
-                sendResponse(500, "Internal Server Error", "text/html", contentBytes, writer, httpRequest);
-                System.out.println("Error while handling request");
-            }
-        } else {
+        
+        if(!handleSearchAndSendFile(writer, httpRequest)) {
             String content = "Not Found";
             byte[] contentBytes = content.getBytes();
             sendResponse(404, "Not Found", "text/html", contentBytes, writer, httpRequest);
@@ -112,20 +99,7 @@ public class RequestHandler implements Runnable {
                     return; 
                 }
             } else {
-                String path = httpRequest.getPath(); 
-                Path filePath = Paths.get(MultiThreadedWebServer.getRootDirectory(), path);
-
-                if (Files.exists(filePath) && !Files.isDirectory(filePath)) {
-                    try {
-                        byte[] fileContent = Files.readAllBytes(filePath);
-                        sendResponse(200, "OK", determineContentType(filePath), fileContent, writer, httpRequest);
-                    } catch (IOException e) {
-                        String content = "Internal Server Error";
-                        byte[] contentBytes = content.getBytes();
-                        sendResponse(500, "Internal Server Error", "text/html", contentBytes, writer, httpRequest);
-                        System.out.println("Error while handling request");
-                    }
-                } else {
+                if(!handleSearchAndSendFile(writer, httpRequest)) {
                     String content = "Not Found";
                     byte[] contentBytes = content.getBytes();
                     sendResponse(404, "Not Found", "text/html", contentBytes, writer, httpRequest);
@@ -140,6 +114,25 @@ public class RequestHandler implements Runnable {
         String content = httpRequest.getFullRequest();
         byte[] contentBytes = content.getBytes();
         sendResponse(200, "OK", "message/http", contentBytes, writer, httpRequest);
+    }
+
+    private boolean handleSearchAndSendFile(BufferedWriter writer, HttpRequest httpRequest) throws IOException {
+        try{
+            String path = httpRequest.getPath();
+            Path filePath = Paths.get(MultiThreadedWebServer.getRootDirectory(), path);
+            if (Files.exists(filePath) && !Files.isDirectory(filePath)) {
+                byte[] fileContent = Files.readAllBytes(filePath);
+                sendResponse(200, "OK", determineContentType(filePath), fileContent, writer, httpRequest);
+                return true;
+            }
+            return false;
+        } catch (IOException e) {
+            String content = "Internal Server Error";
+            byte[] contentBytes = content.getBytes();
+            sendResponse(500, "Internal Server Error", "text/html", contentBytes, writer, httpRequest);
+            System.out.println("Error while handling request");
+            return false;
+        }
     }
     
     private void sendResponse(int statusCode, String statusText, String contentType, byte[] content, BufferedWriter writer, HttpRequest httpRequest) throws IOException {

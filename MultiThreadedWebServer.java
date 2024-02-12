@@ -6,10 +6,8 @@ import java.util.concurrent.Executors;
 import java.io.InputStream;
 import java.util.Properties;
 import java.io.FileInputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+
 
 public class MultiThreadedWebServer {
 
@@ -17,7 +15,7 @@ public class MultiThreadedWebServer {
     private static final int PORT;
     private static final String ROOT_DIRECTORY;
     private static final String DEFAULT_PAGE;
-    private static  List<HashMap<String, String>> EMAILS;
+    private static  HashMap<String, String> SERVER_PARAM;
 
     static {
         // Initialize default values
@@ -47,7 +45,7 @@ public class MultiThreadedWebServer {
         MAX_THREADS = maxThreads;
         ROOT_DIRECTORY = rootDirectory;
         DEFAULT_PAGE = defaultPage;
-        EMAILS = new ArrayList<HashMap<String, String>>();
+        SERVER_PARAM = new HashMap<>();
     }
 
     public static void startServer() {
@@ -81,17 +79,20 @@ public class MultiThreadedWebServer {
         return DEFAULT_PAGE;
     }
 
-    public static List<HashMap<String, String>> getEmails() {
-        return EMAILS;
+    public static HashMap<String, String> getServerParam() {
+        return SERVER_PARAM;
     }
 
-    public static void addEmail(HashMap<String, String> parameters) {
-        String uuid = UUID.randomUUID().toString();
-        parameters.put("uuid", uuid);
-        EMAILS.add(parameters);
+    public static void addParams(HashMap<String, String> params) {
+        for (String key : params.keySet()) {
+            if (SERVER_PARAM.containsKey(key)) {
+                // If the key already exists, update its value
+                SERVER_PARAM.put(key, params.get(key));
+            } else {
+                // If the key doesn't exist, add a new entry
+                SERVER_PARAM.put(key, params.get(key));
+            }
+        }
     }
-
-    public static boolean deleteEmail(String uuid) {
-        return EMAILS.removeIf(email -> email.get("uuid").equals(uuid));
-    }    
+    
 }

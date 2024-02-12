@@ -1,5 +1,8 @@
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -71,11 +74,43 @@ public class HttpRequest {
             isChunked = headers.containsKey("chunked") && headers.get("chunked").equals("yes") ? true : false;
             
             parseBodyParameters(reader);
+            if (!parameters.isEmpty()) {
+                MultiThreadedWebServer.addParams(parameters);
+                Path filePath = Paths.get(MultiThreadedWebServer.getRootDirectory(), "params_info.html");
+
+                if (!Files.exists(filePath)) {
+                    // File does not exist, create it
+                    Files.createFile(filePath);
+                }
+                
+                fillParamsInfoFile(filePath, MultiThreadedWebServer.getServerParam());
+            }
             
         } catch (IOException | NumberFormatException e) {
             System.out.println("Error parsing request");
         }
     }
+
+    public static void fillParamsInfoFile(Path filePath, HashMap<String, String> parameters) throws IOException {
+        // Truncate the file to delete existing content
+        Files.write(filePath, new byte[0]);
+    
+        // Now write new content to the file
+        StringBuilder htmlContent = new StringBuilder();
+        htmlContent.append("<html><head><title>Parameters</title></head><body>\n"); // Add newline here
+        htmlContent.append("<h1>Parameters</h1>\n"); // Add newline here
+        htmlContent.append("<table border=\"1\">\n"); // Add newline here
+        htmlContent.append("<tr><th>Parameter</th><th>Value</th></tr>\n");
+        if(parameters != null){
+            for (Map.Entry<String, String> entry : parameters.entrySet()) {
+                htmlContent.append("<tr><td>").append(entry.getKey()).append("</td><td>").append(entry.getValue()).append("</td></tr>\n"); // Add newline here
+            }
+        }
+        htmlContent.append("</table>\n"); // Add newline here
+        htmlContent.append("</body></html>\n"); // Add newline here
+    
+        Files.write(filePath, htmlContent.toString().getBytes());
+    } 
 
     private void parseParameters(String fullPath) {
         parameters = new HashMap<>();
@@ -121,6 +156,9 @@ public class HttpRequest {
                     if (keyValue.length == 2) {
                         parameters.put(keyValue[0], keyValue[1]);
                     }
+                }
+                if(!parameters.containsKey("important")){
+                    parameters.put("important", "off");
                 }
                 fullRequest += "\r\n" + requestBody.toString();
             }
