@@ -36,7 +36,7 @@ public class RequestHandler implements Runnable {
              BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()))) {
 
             HttpRequest httpRequest = new HttpRequest(reader);
-            System.out.println(httpRequest.getFullRequest());
+            //System.out.println(httpRequest.getFullRequest());
             System.out.println("--------------------");
             httpRequest.printHeaders();
             System.out.println("--------------------");
@@ -99,55 +99,42 @@ public class RequestHandler implements Runnable {
 
     private void handlePostRequest(HttpRequest httpRequest, BufferedWriter writer) {
         try {
-            HashMap<String, String> parameters = httpRequest.getParameters();
-            String deleteStatus = ""; 
-            
-            // Check if the request is for deleting an email
-            if (httpRequest.getPath().equals("/delete")) {
-                Boolean deleted = MultiThreadedWebServer.deleteEmail(parameters.get("uuid-to-delete"));
-                if (deleted) {
-                    System.out.println("Deleted email with uuid: " + parameters.get("uuid-to-delete"));
-                    deleteStatus = "Deleted email with uuid: " + parameters.get("uuid-to-delete");
+            if (httpRequest.getPath().equals("/params_info.html")) {
+                
+                Path filePath = Paths.get(MultiThreadedWebServer.getRootDirectory(), "params_info.html");
+                if (Files.exists(filePath) && !Files.isDirectory(filePath)) {
+                    byte[] contentBytes = Files.readAllBytes(filePath);
+                    sendResponse(200, "OK", "text/html", contentBytes, writer, httpRequest);
                 } else {
-                    System.out.println("Email with uuid: " + parameters.get("uuid-to-delete") + " not found");
-                    deleteStatus = "Email with uuid: " + parameters.get("uuid-to-delete") + " not found";
+                    HttpRequest.fillParamsInfoFile(filePath, MultiThreadedWebServer.getServerParam()); // create the file empty
+                    byte[] contentBytes = Files.readAllBytes(filePath);
+                    sendResponse(200, "OK", "text/html", contentBytes, writer, httpRequest);
+                    return; 
                 }
-            } else if (httpRequest.getPath().equals("/params_info.html")) {
-                MultiThreadedWebServer.addEmail(parameters);
             } else {
-                sendResponse(404, "Not Found", "text/plain", "Requested resource not found".getBytes(), writer, httpRequest);
-                return; 
-            }
-            
-            // Generate dynamic list of parameters and emails
-            StringBuilder dynamicList = new StringBuilder();
-            for (Map.Entry<String, String> entry : parameters.entrySet()) {
-                dynamicList.append("<li>").append(entry.getKey()).append(": ").append(entry.getValue()).append("</li>");
-            }
-            
-            // Generate list of emails
-            StringBuilder emailList = new StringBuilder();
-            List<HashMap<String, String>> emails = MultiThreadedWebServer.getEmails();
-            for (HashMap<String, String> email : emails) {
-                for (Map.Entry<String, String> entry : email.entrySet()) {
-                    emailList.append("<li>").append(entry.getKey()).append(": ").append(entry.getValue()).append("</li>");
+                String path = httpRequest.getPath(); 
+                Path filePath = Paths.get(MultiThreadedWebServer.getRootDirectory(), path);
+
+                if (Files.exists(filePath) && !Files.isDirectory(filePath)) {
+                    try {
+                        byte[] fileContent = Files.readAllBytes(filePath);
+                        sendResponse(200, "OK", determineContentType(filePath), fileContent, writer, httpRequest);
+                    } catch (IOException e) {
+                        String content = "Internal Server Error";
+                        byte[] contentBytes = content.getBytes();
+                        sendResponse(500, "Internal Server Error", "text/html", contentBytes, writer, httpRequest);
+                        System.out.println("Error while handling request");
+                    }
+                } else {
+                    String content = "Not Found";
+                    byte[] contentBytes = content.getBytes();
+                    sendResponse(404, "Not Found", "text/html", contentBytes, writer, httpRequest);
                 }
-                emailList.append("<br>");
             }
-            
-            // Read the html file and replace the dynamic list and email list
-            String htmlContent = new String(Files.readAllBytes(Paths.get(MultiThreadedWebServer.getRootDirectory(), "param_info.html")));
-            htmlContent = htmlContent.replace("{{DynamicList}}", dynamicList.toString());
-            htmlContent = htmlContent.replace("{{EmailList}}", emailList.toString());
-            htmlContent = htmlContent.replace("{{delete}}", deleteStatus);
-    
-            byte[] contentBytes = htmlContent.getBytes();
-    
-            sendResponse(200, "OK", "text/html", contentBytes, writer, httpRequest);
         } catch (IOException e) {
             System.out.println("Error while handling request");
         }
-    }    
+    }       
 
     private void handleTraceRequest(HttpRequest httpRequest, BufferedWriter writer) throws IOException {
         String content = httpRequest.getFullRequest();
