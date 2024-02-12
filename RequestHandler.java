@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,12 +37,25 @@ public class RequestHandler implements Runnable {
              BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()))) {
 
             HttpRequest httpRequest = new HttpRequest(reader);
-            httpRequest.printHeaders();
+            System.out.println(httpRequest.getFullRequest());
+            if(httpRequest.getCorrupted())
+            {
+                sendResponse(400, "Bad Request", "text/html", null, writer, httpRequest);
+                return;
+            }
+            
+            //httpRequest.printHeaders();
+            
 
-            if ("GET".equals(httpRequest.getMethod())) {
+            
+            if ("GET".equals(httpRequest.getMethod()) || "HEAD".equals(httpRequest.getMethod())) {
                 handleGetRequest(httpRequest, writer);
             } else if ("POST".equals(httpRequest.getMethod())) {
-                handlePostRequest(httpRequest, reader, writer);
+                handlePostRequest(httpRequest, writer);
+            } else if ("TRACE".equals(httpRequest.getMethod())) {
+                handleTraceRequest(httpRequest, writer);
+            } else if (httpRequest.getMethod() == null || httpRequest.getMethod() != "OPTIONS" ) {
+                System.out.println("Bad Request");
             } else {
                 String content = "Not Implemented";
                 byte[] contentBytes = content.getBytes();
@@ -56,6 +70,11 @@ public class RequestHandler implements Runnable {
     }
 
     private void handleGetRequest(HttpRequest httpRequest, BufferedWriter writer) throws IOException {
+        if(httpRequest.getMethod() == "HEAD") {
+            // Send only the headers
+            sendResponse(200, "OK", "text/html", null, writer, httpRequest);
+            return;
+        }
         String path = httpRequest.getPath();
 
         Path filePath = Paths.get(MultiThreadedWebServer.getRootDirectory(), path);
@@ -77,31 +96,35 @@ public class RequestHandler implements Runnable {
         }
     }
 
-    private void handlePostRequest(HttpRequest httpRequest, BufferedReader reader, BufferedWriter writer) {
+    private void handlePostRequest(HttpRequest httpRequest, BufferedWriter writer) {
         try {
             HashMap<String, String> parameters = httpRequest.getParameters();
             String deleteStatus = ""; 
-    
-            if (httpRequest.getPath().contains("delete")) {
+            
+            // Check if the request is for deleting an email
+            if (httpRequest.getPath().equals("/delete")) {
                 Boolean deleted = MultiThreadedWebServer.deleteEmail(parameters.get("uuid-to-delete"));
                 if (deleted) {
                     System.out.println("Deleted email with uuid: " + parameters.get("uuid-to-delete"));
-                    // Set delete status message for successful deletion
                     deleteStatus = "Deleted email with uuid: " + parameters.get("uuid-to-delete");
                 } else {
                     System.out.println("Email with uuid: " + parameters.get("uuid-to-delete") + " not found");
-                    // Set delete status message for deletion failure
                     deleteStatus = "Email with uuid: " + parameters.get("uuid-to-delete") + " not found";
                 }
-            } else {
+            } else if (httpRequest.getPath().equals("/params_info.html")) {
                 MultiThreadedWebServer.addEmail(parameters);
+            } else {
+                sendResponse(404, "Not Found", "text/plain", "Requested resource not found".getBytes(), writer, httpRequest);
+                return; 
             }
-    
+            
+            // Generate dynamic list of parameters and emails
             StringBuilder dynamicList = new StringBuilder();
             for (Map.Entry<String, String> entry : parameters.entrySet()) {
                 dynamicList.append("<li>").append(entry.getKey()).append(": ").append(entry.getValue()).append("</li>");
             }
-    
+            
+            // Generate list of emails
             StringBuilder emailList = new StringBuilder();
             List<HashMap<String, String>> emails = MultiThreadedWebServer.getEmails();
             for (HashMap<String, String> email : emails) {
@@ -110,7 +133,8 @@ public class RequestHandler implements Runnable {
                 }
                 emailList.append("<br>");
             }
-    
+            
+            // Read the html file and replace the dynamic list and email list
             String htmlContent = new String(Files.readAllBytes(Paths.get(MultiThreadedWebServer.getRootDirectory(), "param_info.html")));
             htmlContent = htmlContent.replace("{{DynamicList}}", dynamicList.toString());
             htmlContent = htmlContent.replace("{{EmailList}}", emailList.toString());
@@ -122,20 +146,29 @@ public class RequestHandler implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }    
+
+    private void handleTraceRequest(HttpRequest httpRequest, BufferedWriter writer) throws IOException {
+        String content = httpRequest.getFullRequest();
+        byte[] contentBytes = content.getBytes();
+        sendResponse(200, "OK", "message/http", contentBytes, writer, httpRequest);
     }
     
-
     private void sendResponse(int statusCode, String statusText, String contentType, byte[] content, BufferedWriter writer, HttpRequest httpRequest) throws IOException {
         try {
+            if (httpRequest.getCorrupted()){
+                corruptedResponse(writer);
+                return;
+            }
             StringBuilder responseHeaders = new StringBuilder();
             responseHeaders.append("HTTP/1.1 ").append(statusCode).append(" ").append(statusText).append("\r\n");
     
             // Check if the client requested chunked transfer encoding
-            boolean useChunkedTransfer = httpRequest.getHeaders().containsKey("chunked") && "yes".equalsIgnoreCase(httpRequest.getHeaders().get("chunked"));
+            
     
-            if (useChunkedTransfer) {
+            if (httpRequest.isChunked()) {
                 responseHeaders.append("Transfer-Encoding: chunked\r\n");
-            } else {
+            } else if (!httpRequest.getMethod().equalsIgnoreCase("HEAD")) {
                 responseHeaders.append("Content-Length: ").append(content.length).append("\r\n");
             }
     
@@ -146,31 +179,36 @@ public class RequestHandler implements Runnable {
     
             writer.write(responseHeaders.toString());
             writer.flush();
-    
-            if (useChunkedTransfer) {
-                // Send content in chunks
-                try (OutputStream outputStream = clientSocket.getOutputStream()) {
-                    int chunkSize = 1024; // You can adjust the chunk size as needed
-                    for (int i = 0; i < content.length; i += chunkSize) {
-                        int end = Math.min(content.length, i + chunkSize);
-                        outputStream.write(Integer.toHexString(end - i).getBytes());
-                        outputStream.write("\r\n".getBytes());
-                        outputStream.write(content, i, end - i);
-                        outputStream.write("\r\n".getBytes());
+            
+            // Send the response body if the request method is not HEAD
+            if (!httpRequest.getMethod().equalsIgnoreCase("HEAD")) {
+                if (httpRequest.isChunked()) {
+                    // Send content in chunks
+                    try (OutputStream outputStream = clientSocket.getOutputStream()) {
+                        int offset = 0;
+                        while (offset < content.length) {
+                            int bytesToWrite = Math.min(1000, content.length - offset);
+                            outputStream.write(Integer.toHexString(bytesToWrite).getBytes());
+                            outputStream.write("\r\n".getBytes());
+                            outputStream.write(content, offset, bytesToWrite);
+                            outputStream.write("\r\n".getBytes());
+                            offset += bytesToWrite;
+                        }
+                        outputStream.write("0\r\n\r\n".getBytes());
+                        outputStream.flush();
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                    // Send the last chunk with size 0 to indicate end of chunks
-                    outputStream.write("0\r\n\r\n".getBytes());
-                    outputStream.flush();
-                } catch (Exception e) {
-                    e.printStackTrace();
                 }
-            } else {
-                // Send content in a single chunk
-                try (OutputStream outputStream = clientSocket.getOutputStream()) {
-                    outputStream.write(content);
-                    outputStream.flush();
-                } catch (Exception e) {
-                    e.printStackTrace();
+                else {
+                    // Send content in a single chunk
+                    try (OutputStream outputStream = clientSocket.getOutputStream()) {
+                        outputStream.write(content);
+                        outputStream.flush();
+                        outputStream.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
     
@@ -179,7 +217,23 @@ public class RequestHandler implements Runnable {
             e.printStackTrace();
         }
     }
-      
+
+    private void corruptedResponse(BufferedWriter writer) {
+        try {
+            System.out.println("400 Bad Request - The request is corrupted");
+            String errorMessage = "400 Bad Request - The request is corrupted";
+            byte[] errorContent = errorMessage.getBytes();
+            writer.write("HTTP/1.1 400 Bad Request\r\n");
+            writer.write("Content-Length: " + errorContent.length + "\r\n");
+            writer.write("Content-Type: text/plain\r\n");
+            writer.write("\r\n");
+            writer.write(errorMessage);
+            writer.flush();
+            return;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     private String determineContentType(Path filePath) {
         // determine content type based on file extension

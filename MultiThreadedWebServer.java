@@ -93,6 +93,5 @@ public class MultiThreadedWebServer {
 
     public static boolean deleteEmail(String uuid) {
         return EMAILS.removeIf(email -> email.get("uuid").equals(uuid));
-    }
-    
+    }    
 }
