@@ -1,7 +1,12 @@
 public class Program {
     public static void main(String[] args) {
         try{
-            MultiThreadedWebServer.startServer();
+            if(MultiThreadedWebServer.loadConfiguration()){
+                MultiThreadedWebServer.startServer();
+            }
+            else{
+                System.out.println("Error loading configuration");
+            }
         } catch (Exception e) {
             System.out.println("Error starting server " );
         }

@@ -1,6 +1,4 @@
 our bonus implements:
-we added a list of emails to the MultiThreadedWebServer so the user can add new email from index.html and
-see all the existing email on param_info.
-we also add a "delete email" functionality, the user can input the uuid of the email he wishes to delete, and the server will handle the 
-"/delete" endpoint that the html will request.
-the server will also notify to the server if the delete action succeeded.
+The Bonus class provides additional functionality to the web server beyond serving regular HTTP requests.
+It includes methods for displaying a bonus page with a form to delete parameters and for handling the deletion of parameters.
+we comment "// bonus" every where in the code that is about the bonus. 

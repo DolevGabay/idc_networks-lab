@@ -11,41 +11,38 @@ import java.util.HashMap;
 
 public class MultiThreadedWebServer {
 
-    private static final int MAX_THREADS;
-    private static final int PORT;
-    private static final String ROOT_DIRECTORY;
-    private static final String DEFAULT_PAGE;
-    private static  HashMap<String, String> SERVER_PARAM;
+    private static int MAX_THREADS;
+    private static int PORT;
+    private static String ROOT_DIRECTORY;
+    private static String DEFAULT_PAGE;
+    private static HashMap<String, String> SERVER_PARAM;
 
-    static {
-        // Initialize default values
-        int maxThreads = 10;
-        int port = 8080;
-        String rootDirectory = "/";
-        String defaultPage = "index.html";
-
-
+    public static boolean loadConfiguration() {
+        // Initialize values from configuration file
         Properties prop = new Properties();
         try (InputStream input = new FileInputStream("config.ini")) {
             prop.load(input);
 
-            port = Integer.parseInt(prop.getProperty("port"));
-            maxThreads = Integer.parseInt(prop.getProperty("maxThreads"));
-            rootDirectory = prop.getProperty("root");
-            defaultPage = prop.getProperty("defaultPage");
+            PORT = Integer.parseInt(prop.getProperty("port"));
+            MAX_THREADS = Integer.parseInt(prop.getProperty("maxThreads"));
+            ROOT_DIRECTORY = prop.getProperty("root");
+            DEFAULT_PAGE = prop.getProperty("defaultPage");
+            SERVER_PARAM = new HashMap<>();
+
+            if (PORT <= 0 || MAX_THREADS <= 0 || ROOT_DIRECTORY == null || DEFAULT_PAGE == null) {
+                return false;
+            }
+    
+            return true;        
         } catch (IOException ex) {
             System.err.println("Error loading configuration from config.ini: " + ex.getMessage());
-            System.err.println("Using default values instead.");
+            System.err.println("Unable to start the server.");
+            return false;
         } catch (NumberFormatException ex) {
             System.err.println("Invalid number format in configuration file.");
-            System.err.println("Using default values instead.");
+            System.err.println("Unable to start the server.");
+            return false;
         }
-
-        PORT = port;
-        MAX_THREADS = maxThreads;
-        ROOT_DIRECTORY = rootDirectory;
-        DEFAULT_PAGE = defaultPage;
-        SERVER_PARAM = new HashMap<>();
     }
 
     public static void startServer() {
@@ -53,7 +50,11 @@ public class MultiThreadedWebServer {
         ExecutorService threadPool = Executors.newFixedThreadPool(MAX_THREADS);
 
         try {
-            ServerSocket serverSocket = new ServerSocket(PORT);
+            ServerSocket serverSocket = createServerSocket(PORT);
+            if (serverSocket == null) {
+                return;
+            }
+
             System.out.println("Server listening on port " + PORT);
             while (true) {
                 try{
@@ -71,6 +72,15 @@ public class MultiThreadedWebServer {
         }
     }
 
+    private static ServerSocket createServerSocket(int port) {
+        try {
+            return new ServerSocket(port);
+        } catch (IOException e) {
+            System.out.println("Error creating server socket. Make sure the port is ready to use.");
+        }
+        return null;
+    }
+
     public static String getRootDirectory() {
         return ROOT_DIRECTORY;
     }
@@ -84,15 +94,12 @@ public class MultiThreadedWebServer {
     }
 
     public static void addParams(HashMap<String, String> params) {
-        for (String key : params.keySet()) {
-            if (SERVER_PARAM.containsKey(key)) {
-                // If the key already exists, update its value
+        for (String key : params.keySet()) { 
                 SERVER_PARAM.put(key, params.get(key));
-            } else {
-                // If the key doesn't exist, add a new entry
-                SERVER_PARAM.put(key, params.get(key));
-            }
         }
     }
-    
+
+    public static void removeParam(String key) { // bonus
+        SERVER_PARAM.remove(key);
+    }
 }

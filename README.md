@@ -35,11 +35,11 @@ MultiThreadedWebServer is a simple Java web server that handles HTTP requests co
 
 The MultiThreadedWebServer follows a multi-threaded design to handle multiple client connections concurrently. When a client connects to the server, a new `RequestHandler` thread is spawned to handle the client's request. The server listens for incoming connections on the specified port and creates a fixed-size thread pool using `ExecutorService` to manage thread concurrency.
 
-The `RequestHandler` class is responsible for handling incoming HTTP requests. It utilizes the HttpRequest class to parse the requests and determine their methods. Depending on the request method, it either serves static files from the designated root directory for GET requests or extracts parameters from the request body for POST requests. In the case of POST requests, it constructs an HTML response containing the received parameters to be displayed to the client.
+The `RequestHandler` class is responsible for handling incoming HTTP requests. It utilizes the HttpRequest class to parse the requests and determine their methods. Depending on the request method, it either serves static files from the designated root directory for GET requests and extracts parameters from the request body and URL in any request method and store it, if a parmenter exist it update it. In the case of POST requests to params_info.html, if it doesn't exist, it constructs an HTML response containing the all the existing parameters to be displayed to the client.
 
-The `HttpRequest` class parses HTTP request lines, headers, and parameters, providing methods to access various attributes of the request. It distinguishes between GET and POST requests and extracts parameters accordingly.
+The `HttpRequest` class parses HTTP request lines, headers, and parameters, providing methods to access various attributes of the request. In addition it parse the parmeters from the body and from the URL, no matter the method of the request.
 
-Overall, the server is designed to efficiently handle concurrent HTTP requests, serving static content and processing POST requests with form data submission.
+Overall, the server is designed to efficiently handle concurrent HTTP requests, serving static content and processing POST, GET, HEAD and TRACE requests.
 
 
 

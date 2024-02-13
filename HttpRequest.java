@@ -36,10 +36,13 @@ public class HttpRequest {
                 Corrupted = true;
                 return;
             }
+
             fullRequest = requestLine;
+
             String[] requestParts = requestLine.split(" ");
             if (requestParts.length == 3 || requestParts.length == 2) {
                 method = requestParts[0];
+                
                 String fullPath = requestParts[1];
                 parseParameters(fullPath);
                 String[] pathAndParams = requestParts[1].split("\\?");
@@ -47,10 +50,15 @@ public class HttpRequest {
                 if (requestParts.length == 3) {
                     if (!requestParts[2].equals("HTTP/1.1") && !requestParts[2].equals("HTTP/1.0")) {
                         Corrupted = true;
+                        return;
                     }
                 }                
             }
-    
+            else {
+                Corrupted = true;
+                return;
+            }
+
             headers = new HashMap<>();
             String headerLine;
             while ((headerLine = reader.readLine()) != null && !headerLine.isEmpty()) {
@@ -74,7 +82,8 @@ public class HttpRequest {
             isChunked = headers.containsKey("chunked") && headers.get("chunked").equals("yes") ? true : false;
             
             parseBodyParameters(reader);
-            if (!parameters.isEmpty()) {
+            
+            if (!parameters.isEmpty() && !path.equals("/bonus.html/delete-parameter")) { // If the request is not for the bonus page
                 MultiThreadedWebServer.addParams(parameters);
                 Path filePath = Paths.get(MultiThreadedWebServer.getRootDirectory(), "params_info.html");
 
@@ -83,11 +92,12 @@ public class HttpRequest {
                     Files.createFile(filePath);
                 }
                 
-                fillParamsInfoFile(filePath, MultiThreadedWebServer.getServerParam());
+                fillParamsInfoFile(filePath, parameters);
             }
             
         } catch (IOException | NumberFormatException e) {
             System.out.println("Error parsing request");
+            Corrupted = true;
         }
     }
 
@@ -97,17 +107,29 @@ public class HttpRequest {
     
         // Now write new content to the file
         StringBuilder htmlContent = new StringBuilder();
-        htmlContent.append("<html><head><title>Parameters</title></head><body>\n"); // Add newline here
-        htmlContent.append("<h1>Parameters</h1>\n"); // Add newline here
-        htmlContent.append("<table border=\"1\">\n"); // Add newline here
+        htmlContent.append("<html><head><title>Parameters</title></head><body>\n"); 
+        htmlContent.append("<h1>Last Parameters</h1>\n");
+        htmlContent.append("<table border=\"1\">\n"); 
         htmlContent.append("<tr><th>Parameter</th><th>Value</th></tr>\n");
         if(parameters != null){
             for (Map.Entry<String, String> entry : parameters.entrySet()) {
-                htmlContent.append("<tr><td>").append(entry.getKey()).append("</td><td>").append(entry.getValue()).append("</td></tr>\n"); // Add newline here
+                htmlContent.append("<tr><td>").append(entry.getKey()).append("</td><td>").append(entry.getValue()).append("</td></tr>\n"); 
             }
         }
-        htmlContent.append("</table>\n"); // Add newline here
-        htmlContent.append("</body></html>\n"); // Add newline here
+        htmlContent.append("</table>\n"); 
+
+        htmlContent.append("<h1>All Parameters sent to the server (updated)</h1>\n");
+        htmlContent.append("<table border=\"1\">\n"); 
+        htmlContent.append("<tr><th>Parameter</th><th>Value</th></tr>\n");
+        if(MultiThreadedWebServer.getServerParam() != null){
+            for (Map.Entry<String, String> entry : MultiThreadedWebServer.getServerParam().entrySet()) {
+                htmlContent.append("<tr><td>").append(entry.getKey()).append("</td><td>").append(entry.getValue()).append("</td></tr>\n"); 
+            }
+        }
+        htmlContent.append("</table>\n"); 
+
+
+        htmlContent.append("</body></html>\n"); 
     
         Files.write(filePath, htmlContent.toString().getBytes());
     } 
@@ -170,7 +192,6 @@ public class HttpRequest {
     public void printHeaders() {
         try {
             StringBuilder stringHeaders = new StringBuilder();
-            stringHeaders.append("Request headers: ").append("\r\n");
             stringHeaders.append("Request Method: ").append(this.method).append("\r\n");
             stringHeaders.append("Requested Page: ").append(this.requestedPage).append("\r\n");
             stringHeaders.append("IsImage: ").append(this.isImage).append("\r\n");
@@ -178,6 +199,7 @@ public class HttpRequest {
             stringHeaders.append("Referer: ").append(this.referer).append("\r\n");
             stringHeaders.append("User Agent: ").append(this.userAgent).append("\r\n");
             stringHeaders.append("Is Chunked: ").append(this.isChunked).append("\r\n");
+            stringHeaders.append("Corrupted: ").append(this.Corrupted).append("\r\n");
             if(this.parameters != null) {
                 if (this.parameters.size() > 0) {
                     stringHeaders.append("Parameters: ").append("\r\n");
@@ -230,10 +252,13 @@ public class HttpRequest {
     }
 
     public String getFullRequest() {
+        if (fullRequest == null) {
+            return "the request is empty";
+        }
         return fullRequest;
     }
 
-    public Boolean getCorrupted() {
+    public Boolean isCorrupted() {
         return Corrupted;
     }
 

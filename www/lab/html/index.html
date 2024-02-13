@@ -6,67 +6,149 @@
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
   <title>Computer networks</title>
   <style>
-    .images {
-      text-align: center;
-    }
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
 
-    .images img {
-      margin: 5px; 
-    }
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f2f2f2;
+}
 
-    h1 {
-      color: blue;
-      position: relative;
-      animation: moveTitle 2s infinite alternate;
-    }
+.container {
+    max-width: 600px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
 
-    @keyframes moveTitle {
-      to {
+.title {
+    color: blue;
+    position: relative;
+    animation: moveTitle 2s infinite alternate;
+}
+
+@keyframes moveTitle {
+    to {
         transform: translateX(10px);
-      }
     }
+}
 
-    h2 {
-      color: red;
-    }
+.subtitle {
+    color: red;
+}
+
+.images {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.images img {
+    margin: 5px;
+}
+
+.links {
+    margin-top: 20px;
+}
+
+.links a {
+    text-decoration: none;
+    color: #007bff;
+    margin-right: 10px;
+}
+
+.links a:hover {
+    text-decoration: underline;
+}
+
+.form-container {
+    margin-top: 20px;
+}
+
+.form-container label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-container input[type="text"],
+.form-container textarea {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.form-container input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+.form-container input[type="submit"] {
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.form-container input[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+.hr-line {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
   </style>
 </head>
 <body>
-    <h1>Computer networks 2023: Exercise 1</h1>
-
-    <h2>Dolev Gabay & Gal Razabi</h2>
-
+  <div class="container">
+    <h1 class="title">Computer networks 2023: Exercise 1</h1>
+    <h2 class="subtitle">Dolev Gabay & Gal Razabi</h2>
+  
     <div class="images">
         <img src="./spongebob.jpg" alt="spongebob" width="200" height="150">
         <img src="./patrick.jpg" alt="patrick" width="200" height="150">
     </div>
-
+  
     <div class="links">
         <a href="https://moodle.runi.ac.il/2024/course/view.php?id=2401572">Course Website</a> <br> 
         <a href="https://playlistsync.me">Playlist-sync</a>
     </div>
-
-    <hr>
-
-    <form action="http://localhost:8080/params_info.html" method="post">
-      <h2>Send an email:</h2>
-      <label for="Sender">Sender:</label><br>
-      <input type="text" id="Sender" name="Sender"><br>
   
-      <label for="Receiver">Receiver:</label><br>
-      <input type="text" id="Receiver" name="Receiver"><br>
+    <hr class="hr-line">
   
-      <label for="Subject">Subject:</label><br>
-      <input type="text" id="Subject" name="Subject"><br>
-  
-      <label for="Message">Message:</label><br>
-      <textarea id="Message" name="Message"></textarea><br> 
-  
-      <input type="checkbox" id="important" name="important"> 
-      <label for="important">Important</label><br>
-  
-      <input type="submit" value="Submit">
-  </form>
-  
+    <div class="form-container">
+      <form action="http://localhost:8080/params_info.html" method="post">
+        <label for="Sender">Sender:</label><br>
+        <input type="text" id="Sender" name="Sender"><br>
+    
+        <label for="Receiver">Receiver:</label><br>
+        <input type="text" id="Receiver" name="Receiver"><br>
+    
+        <label for="Subject">Subject:</label><br>
+        <input type="text" id="Subject" name="Subject"><br>
+    
+        <label for="Message">Message:</label><br>
+        <textarea id="Message" name="Message"></textarea><br> 
+    
+        <input type="checkbox" id="important" name="important"> 
+        <label for="important">Important</label><br>
+    
+        <input type="submit" value="Submit">
+      </form>
+    </div>
+  </div>
 </body>
 </html>
