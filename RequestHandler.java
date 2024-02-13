@@ -242,7 +242,7 @@ public class RequestHandler implements Runnable {
     }   
 
     private byte[] getContent(int statusCode) {
-        // determine content type based on status code
+        // determine content type based on the status code
         String content = "";
         switch (statusCode) {
             case 400:
