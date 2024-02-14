@@ -5,8 +5,9 @@ MultiThreadedWebServer is a simple Java web server that handles HTTP requests co
 ## Getting started
 - cd to your project directory
 - make sure that you have the permissionts to run the compile.sh and run.sh files
-- chmod +x compile.sh
+- chmod +x compile.sh (or xattr -d com.apple.quarantine /PATH/TO/SCRIPTYOUCANTRUN.sh in apple macbook if chmod doesn't work)
 - chmod +x run.sh
+- (if chmod doesn't work you can try "xattr -d com.apple.quarantine /PATH/TO/SCRIPTYOUCANTRUN.sh" in apple macbook)
 
 - replace the values with your desired configurations in config.ini:
 - `port`: The port on which the server listens for incoming connections.

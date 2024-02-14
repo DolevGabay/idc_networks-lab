@@ -33,7 +33,7 @@ public class RequestHandler implements Runnable {
              BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()))) {
                 
             HttpRequest httpRequest = new HttpRequest(reader);
-            System.out.println("here");
+
             printRequestInfo(httpRequest);
 
             if(httpRequest.isCorrupted())
@@ -71,7 +71,7 @@ public class RequestHandler implements Runnable {
     private void handlePostRequest(HttpRequest httpRequest, BufferedWriter writer) {
         try {
             if (httpRequest.getPath().equals("/params_info.html")) {
-                
+        
                 Path filePath = Paths.get(MultiThreadedWebServer.getRootDirectory(), "params_info.html");
                 if (Files.exists(filePath) && !Files.isDirectory(filePath)) {
                     byte[] contentBytes = Files.readAllBytes(filePath);

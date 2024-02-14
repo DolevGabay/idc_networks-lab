@@ -1,7 +1,5 @@
-#!/bin/bash
-
-# Compile the MultiThreadedChatServer.java file
-javac Program.java
+# Compile all Java files in the Sources directory
+javac Sources/*.java
 
 if [ $? -eq 0 ]; then
   echo "Compilation successful! You can now run the server with './run.sh'."

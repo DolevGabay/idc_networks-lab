@@ -1,2 +1,2 @@
-# Run the compiled MultiThreadedChatServer with Java
+cd Sources
 java Program

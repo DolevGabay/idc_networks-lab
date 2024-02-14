@@ -14,7 +14,7 @@ public class Bonus {
             
             // Form to enter the parameter to delete
             writer.write("<form method=\"post\" action=\"/bonus.html/delete-parameter\">");
-            writer.write("<label for=\"paramToDelete\">Enter parameter to delete:</label><br>");
+            writer.write("<label for=\"paramToDelete\">Enter parameter key to delete:</label><br>");
             writer.write("<input type=\"text\" id=\"paramToDelete\" name=\"paramToDelete\"><br>");
             writer.write("<input type=\"submit\" value=\"Submit\">");
             writer.write("</form>");

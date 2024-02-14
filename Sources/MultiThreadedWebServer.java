@@ -20,7 +20,7 @@ public class MultiThreadedWebServer {
     public static boolean loadConfiguration() {
         // Initialize values from configuration file
         Properties prop = new Properties();
-        try (InputStream input = new FileInputStream("config.ini")) {
+        try (InputStream input = new FileInputStream("../config.ini")) {
             prop.load(input);
 
             PORT = Integer.parseInt(prop.getProperty("port"));
@@ -95,9 +95,16 @@ public class MultiThreadedWebServer {
 
     public static void addParams(HashMap<String, String> params) {
         for (String key : params.keySet()) { 
-                SERVER_PARAM.put(key, params.get(key));
+            String value = params.get(key);
+            if (key.equals("important")) {
+                if (!value.equals("on") && !value.equals("off")) {
+                    // If the value is neither "on" nor "off", dont add it to the server params
+                    continue; 
+                }
+            }
+            SERVER_PARAM.put(key, value);
         }
-    }
+    }    
 
     public static void removeParam(String key) { // bonus
         SERVER_PARAM.remove(key);

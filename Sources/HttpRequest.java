@@ -31,7 +31,7 @@ public class HttpRequest {
     private void parseRequest(BufferedReader reader) {
         try {
             String requestLine = reader.readLine();
-            if (requestLine == null) {
+            if (requestLine == null) { // check if the request is empty
                 System.out.println("Error reading request. Ignoring");
                 Corrupted = true;
                 return;
@@ -62,7 +62,7 @@ public class HttpRequest {
             headers = new HashMap<>();
             String headerLine;
             while ((headerLine = reader.readLine()) != null && !headerLine.isEmpty()) {
-                fullRequest += "\r\n" + headerLine;
+                fullRequest += "\r\n" + headerLine;    // add the header to the full request
                 String[] headerParts = headerLine.split(": ");
                 if (headerParts.length == 2) {
                     headers.put(headerParts[0], headerParts[1]);
@@ -116,8 +116,8 @@ public class HttpRequest {
                 htmlContent.append("<tr><td>").append(entry.getKey()).append("</td><td>").append(entry.getValue()).append("</td></tr>\n"); 
             }
         }
-        htmlContent.append("</table>\n"); 
 
+        htmlContent.append("</table>\n"); 
         htmlContent.append("<h1>All Parameters sent to the server (updated)</h1>\n");
         htmlContent.append("<table border=\"1\">\n"); 
         htmlContent.append("<tr><th>Parameter</th><th>Value</th></tr>\n");
@@ -135,6 +135,7 @@ public class HttpRequest {
     } 
 
     private void parseParameters(String fullPath) {
+        // Parse the parameters from the URL
         parameters = new HashMap<>();
         try {
             if (fullPath.contains("?")) {
@@ -154,7 +155,6 @@ public class HttpRequest {
         }
     }
     
-
     private void parseBodyParameters(BufferedReader reader) {
         try {
             StringBuilder requestBody = new StringBuilder();
