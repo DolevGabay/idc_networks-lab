@@ -76,9 +76,10 @@ public class HttpRequest {
             path = path.replaceAll("\\.\\./", "/");
             requestedPage = path;
             isImage = path.endsWith(".bmp") || path.endsWith(".gif") || path.endsWith(".png") || path.endsWith(".jpg");
-            contentLength = Integer.parseInt(headers.getOrDefault("Content-Length", "0"));
-            referer = headers.getOrDefault("Referer", "");
-            userAgent = headers.getOrDefault("User-Agent", "");
+            String contentLengthStr = headers.containsKey("Content-Length") ? headers.get("Content-Length") : "0";
+            contentLength = Integer.parseInt(contentLengthStr);
+            referer = headers.containsKey("Referer") ? headers.get("Referer") : "";
+            userAgent = headers.containsKey("User-Agent") ? headers.get("User-Agent") : "";
             isChunked = headers.containsKey("chunked") && headers.get("chunked").equals("yes") ? true : false;
             
             parseBodyParameters(reader);
