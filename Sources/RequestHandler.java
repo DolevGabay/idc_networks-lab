@@ -3,6 +3,8 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 public class RequestHandler implements Runnable {
 
@@ -74,13 +76,16 @@ public class RequestHandler implements Runnable {
         
                 Path filePath = Paths.get(MultiThreadedWebServer.getRootDirectory(), "params_info.html");
                 if (Files.exists(filePath) && !Files.isDirectory(filePath)) {
-                    byte[] contentBytes = Files.readAllBytes(filePath);
+                    byte[] contentBytes = updateParamsInfoFile(filePath, httpRequest);
                     sendResponse(200, "text/html", contentBytes, writer, httpRequest);
                 } else {
-                    HttpRequest.fillParamsInfoFile(filePath, null); // create the file if it does not exist
-                    byte[] contentBytes = Files.readAllBytes(filePath);
-                    sendResponse(200,"text/html", contentBytes, writer, httpRequest);
-                    return; 
+                    // create file
+                    if(createParamsInfoFile()){
+                        byte[] contentBytes = updateParamsInfoFile(filePath, httpRequest);
+                        sendResponse(200,"text/html", contentBytes, writer, httpRequest);
+                        return;
+                    }
+                    sendResponse(500, "text/html", null, writer, httpRequest);
                 }
             } else if (httpRequest.getPath().equals("/bonus.html/delete-parameter")){  // bonus 
                 Bonus.deleteParameter(writer, httpRequest);
@@ -123,12 +128,69 @@ public class RequestHandler implements Runnable {
             return false;
         }
     }
+
+    private byte[] updateParamsInfoFile(Path filePath, HttpRequest httpRequest) throws IOException {
+        // Generate dynamic list of last parameters
+        HashMap<String, String> parameters = httpRequest.getParameters();
+        StringBuilder dynamicList = new StringBuilder();
+        for (Map.Entry<String, String> entry : parameters.entrySet()) {
+            dynamicList.append("<li>").append(entry.getKey()).append(": ").append(entry.getValue()).append("</li>");
+        }
+
+        // Generate dynamic list of all server parameters
+        HashMap<String, String> allServerParameters = MultiThreadedWebServer.getServerParam();
+        StringBuilder allParameters = new StringBuilder();
+        for (Map.Entry<String, String> entry : allServerParameters.entrySet()) {
+            allParameters.append("<li>").append(entry.getKey()).append(": ").append(entry.getValue()).append("</li>");
+        }
+
+        Path htmlFilePath = Paths.get(MultiThreadedWebServer.getRootDirectory(), "params_info.html");
+        String htmlContent = new String(Files.readAllBytes(htmlFilePath));
+
+        // Find the end of the body tag
+        int bodyEndIndex = htmlContent.lastIndexOf("</body>");
+
+        if (bodyEndIndex != -1) {
+            // Append dynamic lists to the end of the body
+            StringBuilder modifiedHtmlContent = new StringBuilder(htmlContent);
+            modifiedHtmlContent.insert(bodyEndIndex, allParameters.toString());
+            modifiedHtmlContent.insert(bodyEndIndex, "<h1>All Parameters</h1>");
+            modifiedHtmlContent.insert(bodyEndIndex, dynamicList.toString());
+            modifiedHtmlContent.insert(bodyEndIndex, "<h1>Last Parameters</h1>");
+
+            byte[] contentBytes = modifiedHtmlContent.toString().getBytes();
+            return contentBytes;
+        } else {
+            return htmlContent.getBytes();
+        }
+    }
+
+    private boolean createParamsInfoFile(){
+        try {
+            Path filePath = Paths.get(MultiThreadedWebServer.getRootDirectory(), "params_info.html");
+            
+            String content = "<!DOCTYPE html>\n" +
+                    "<html>\n" +
+                    "<head>\n" +
+                    "    <title>Parameters Information</title>\n" +
+                    "</head>\n" +
+                    "<body>\n" +
+                    "<h1>Parameters Information</h1>\n" +
+                    "</body>\n" +
+                    "</html>";
+            Files.write(filePath, content.getBytes());
+            return true;
+        } catch (IOException e) {
+            System.out.println("Error while creating params_info.html file");
+            return false;
+        }
+    }
     
     private void sendResponse(int statusCode, String contentType, byte[] content, BufferedWriter writer, HttpRequest httpRequest) throws IOException {
         try {
             String statusText = getErrorStatus(statusCode);
 
-            if(statusCode != 200 && content == null) {
+            if(statusCode != 200 && content == null) { // if content is null, get the default error page
                 content = getContent(statusCode);
             }
 
@@ -186,13 +248,19 @@ public class RequestHandler implements Runnable {
     }
 
     private void printRequestInfo(HttpRequest httpRequest){
-        System.out.println("-----------------------------");
-        System.out.println("Full Request: ");
-        System.out.println(httpRequest.getFullRequest());
-        System.out.println("-----------------------------");
-        System.out.println("Request Headers: ");
-        httpRequest.printHeaders();
-        System.out.println("-----------------------------");
+        if(!httpRequest.isCorrupted()){
+            System.out.println("-----------------------------");
+            System.out.println("Full Request: ");
+            System.out.println(httpRequest.getFullRequest());
+            System.out.println("-----------------------------");
+            System.out.println("Request Headers: ");
+            httpRequest.printHeaders();
+            System.out.println("-----------------------------");
+        }
+        else{
+            System.out.println("Corrupted Request: ");
+            System.out.println(httpRequest.getFullRequest());
+        }
     }
 
     private String determineContentType(Path filePath) {

@@ -83,16 +83,8 @@ public class HttpRequest {
             
             parseBodyParameters(reader);
             
-            if (!parameters.isEmpty() && !path.equals("/bonus.html/delete-parameter")) { // If the request is not for the bonus page
-                MultiThreadedWebServer.addParams(parameters);
-                Path filePath = Paths.get(MultiThreadedWebServer.getRootDirectory(), "params_info.html");
-
-                if (!Files.exists(filePath)) {
-                    // File does not exist, create it
-                    Files.createFile(filePath);
-                }
-                
-                fillParamsInfoFile(filePath, parameters);
+            if (!parameters.isEmpty() && !path.equals("/bonus.html/delete-parameter")) { // bonus.html/delete-parameter is a special case
+                MultiThreadedWebServer.addParams(parameters);            
             }
             
         } catch (IOException | NumberFormatException e) {
@@ -100,39 +92,6 @@ public class HttpRequest {
             Corrupted = true;
         }
     }
-
-    public static void fillParamsInfoFile(Path filePath, HashMap<String, String> parameters) throws IOException {
-        // Truncate the file to delete existing content
-        Files.write(filePath, new byte[0]);
-    
-        // Now write new content to the file
-        StringBuilder htmlContent = new StringBuilder();
-        htmlContent.append("<html><head><title>Parameters</title></head><body>\n"); 
-        htmlContent.append("<h1>Last Parameters</h1>\n");
-        htmlContent.append("<table border=\"1\">\n"); 
-        htmlContent.append("<tr><th>Parameter</th><th>Value</th></tr>\n");
-        if(parameters != null){
-            for (Map.Entry<String, String> entry : parameters.entrySet()) {
-                htmlContent.append("<tr><td>").append(entry.getKey()).append("</td><td>").append(entry.getValue()).append("</td></tr>\n"); 
-            }
-        }
-
-        htmlContent.append("</table>\n"); 
-        htmlContent.append("<h1>All Parameters sent to the server (updated)</h1>\n");
-        htmlContent.append("<table border=\"1\">\n"); 
-        htmlContent.append("<tr><th>Parameter</th><th>Value</th></tr>\n");
-        if(MultiThreadedWebServer.getServerParam() != null){
-            for (Map.Entry<String, String> entry : MultiThreadedWebServer.getServerParam().entrySet()) {
-                htmlContent.append("<tr><td>").append(entry.getKey()).append("</td><td>").append(entry.getValue()).append("</td></tr>\n"); 
-            }
-        }
-        htmlContent.append("</table>\n"); 
-
-
-        htmlContent.append("</body></html>\n"); 
-    
-        Files.write(filePath, htmlContent.toString().getBytes());
-    } 
 
     private void parseParameters(String fullPath) {
         // Parse the parameters from the URL

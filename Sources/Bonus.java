@@ -36,13 +36,8 @@ public class Bonus {
     public static void deleteParameter(BufferedWriter writer, HttpRequest request) {
         String paramToDelete = request.getParameters().get("paramToDelete");
         if (paramToDelete != null) {
-            MultiThreadedWebServer.removeParam(paramToDelete); // update the params_info.html file
+            MultiThreadedWebServer.removeParam(paramToDelete);
             dispalyBonusPage(writer, request);
-            try{
-                HttpRequest.fillParamsInfoFile(Paths.get(MultiThreadedWebServer.getRootDirectory(), "params_info.html"), null);
-            } catch (IOException e) {
-                System.out.println("Error writing response to client" );
-            }
         }
         else {
             try {
